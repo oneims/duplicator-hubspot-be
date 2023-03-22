@@ -1,6 +1,7 @@
 "use strict";
 const axios = require("axios");
 const hubspot = require("@hubspot/api-client");
+let retryThreshold = 0;
 
 /**
  * A set of functions called "actions" for `hubspot`
@@ -90,7 +91,7 @@ module.exports = {
         primaryAction: {
           type: "CONFIRMATION_ACTION_HOOK",
           httpMethod: "POST",
-          uri: `https://e6a1-39-59-242-74.in.ngrok.io/api/hubspot/runDuplicator?portalId=${portalId}&objectId=${associatedObjectId}`,
+          uri: `${process.env.API_URL}/hubspot/runDuplicator?portalId=${portalId}&objectId=${associatedObjectId}`,
           label: "Duplicate This Record",
           associatedObjectProperties: ["demo_crm_property"],
           confirmationMessage:
@@ -107,7 +108,6 @@ module.exports = {
     }
   },
   runDuplicator: async (ctx, next) => {
-    let retryThreshold = 0;
     const paramsArr = ctx.url.split("?")[1];
     const urlSearchParams = new URLSearchParams(paramsArr);
     const params = Object.fromEntries(urlSearchParams.entries());
@@ -158,7 +158,9 @@ module.exports = {
         );
         clonedProperties = data.properties;
         const updatedEmail = data.properties.email.split("@");
-        clonedProperties.email = `${updatedEmail[0]}__cloned@${updatedEmail[1]}`;
+        clonedProperties.email = `${updatedEmail[0]}__cloned__${Math.floor(
+          Math.random() * 10000000
+        )}@${updatedEmail[1]}`;
         clonedProperties.lastname = `${data.properties.lastname} (Cloned)`;
         delete clonedProperties.lastmodifieddate;
         delete clonedProperties.createdate;
@@ -222,7 +224,10 @@ module.exports = {
         );
         retryThreshold++;
         if (retryThreshold < 3) {
-          await action();
+          console.log(
+            `successfully updated tokens -- calling runDuplicator again.`
+          );
+          return module.exports.runDuplicator(ctx);
         } else {
           ctx.body = err;
         }
