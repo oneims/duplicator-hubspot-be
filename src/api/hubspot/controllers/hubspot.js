@@ -223,14 +223,18 @@ module.exports = {
           }
         );
         retryThreshold++;
-        if (retryThreshold < 3) {
-          console.log(
-            `successfully updated tokens -- calling runDuplicator again.`
-          );
-          return module.exports.runDuplicator(ctx);
-        } else {
-          ctx.body = err;
-        }
+        // if (retryThreshold < 3) {
+        //   console.log(
+        //     `successfully updated tokens -- calling runDuplicator again.`
+        //   );
+        //   return module.exports.runDuplicator(ctx);
+        // } else {
+        //   ctx.body = err;
+        // }
+        console.log(
+          `successfully updated tokens -- calling runDuplicator again.`
+        );
+        return module.exports.runDuplicator(ctx);
       } else {
         console.log(err);
         ctx.body = err;
